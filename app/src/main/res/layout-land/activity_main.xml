@@ -26,6 +26,7 @@
 
 </LinearLayout>
 
+
 <!-- LEGENDE
 "in dem Landscape-Modus sollen die 2 Layouts nebeneinander dargestellt werden"
  android:layout_weight="1"  ->
