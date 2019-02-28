@@ -1,6 +1,7 @@
 package de.proneucon.fragmentdemo;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -66,6 +67,21 @@ public class MainActivity extends AppCompatActivity {
                 detailsAnzeigen(zuletztSelektiert);        //Methode dA in der MainActivity
             }
         }
+
+        //--------------------------------------------------
+        //SAVE-ON-INSTANCE-STATE
+        @Override
+        public void onSaveInstanceState(@NonNull Bundle outState) {
+            super.onSaveInstanceState(outState);
+            outState.putInt(STR_ZULETZT_SELEKTIERT , zuletztSelektiert);
+        }
+
+        //--------------------------------------------------
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            detailsAnzeigen(position);      //beim drücken wird X angezeigt
+        }
+
         //--------------------------------------------------
         //soll es direkt (als weiterleitung zum Frame) angezeigt werden oder im 2 spalten-Modus
         private void detailsAnzeigen(int zuletztSelektiert) {
@@ -102,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     public static class DetailFragment extends Fragment {  //VERWENDET im LANDSCAPE-MODUS
 
         public static final String INDEX = "index";
-        //**************************************************
+        //--------------------------------
         public static DetailFragment newInstance(int indexZuletztSelektiert) {
             //Bauen eines DetailFragments:
             DetailFragment fragment = new DetailFragment(); //erzeugen des DetailFragment
@@ -113,12 +129,12 @@ public class MainActivity extends AppCompatActivity {
             fragment.setArguments(args);                    //setzen der übergebenen argumente
             return fragment;                                // zurückgeben des DetailFragments
         }
-        //**************************************************
+        //--------------------------------
         public int getIndex(){      //besorge den Index
             return getArguments().getInt(INDEX , 0);
         }
 
-        //**************************************************
+        //--------------------------------
         @Nullable
         @Override
         public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -143,6 +159,29 @@ public class MainActivity extends AppCompatActivity {
     //**************************************************
     public static class DetailsActivity extends AppCompatActivity{
 
+        @Override
+        protected void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            //BERÜCKSICHTIGE die orientierung  -> wenn wir das Handy drehen
+            //prüfe ob im landscape-Modus
+            if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+                //Activity soll beendet werden
+                finish();
+                return;//MEthode verlassen wenn es nicht so ist
+            }
+
+            if(savedInstanceState==null){
+                DetailFragment detailFragment = new DetailFragment();
+
+                detailFragment.setArguments( getIntent().getExtras() );     //setzt die übergebenen Argumente in das detailFragment
+
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .add( android.R.id.content , detailFragment )
+                        .commit();
+            }
+
+        }
     }
 
 
