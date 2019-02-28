@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,10 +17,13 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-
-import java.util.List;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+
+    //LOG-TAG
+    private static final String TAG = MainActivity.class.getSimpleName();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         //zustand der App speichern
         public static final String STR_ZULETZT_SELEKTIERT = "zuletztSelektiert";    //- KeyValue
-        boolean zweiSpaltenModus;   //
+        boolean imLandscape;   //
         int zuletztSelektiert = 0;
 
         //--------------------------------------------------
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
             View detailsFrame = getActivity().findViewById(R.id.details);
                 // finden wir in der Activity
 
-            zweiSpaltenModus = detailsFrame!=null && detailsFrame.getVisibility()==View.VISIBLE ;
+            imLandscape = detailsFrame!=null && detailsFrame.getVisibility()==View.VISIBLE ;
                 // detailsFrame!=null -> prüft ob leer
                 // detailsFrame.getVisibility()==View.VISIBLE  -> prüft ob sichtbar
 
@@ -62,8 +66,10 @@ public class MainActivity extends AppCompatActivity {
                 zuletztSelektiert = savedInstanceState.getInt(STR_ZULETZT_SELEKTIERT , 0);
             }
 
-            if(zweiSpaltenModus){
-                getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE); //das zuletzt
+            //Damit der ChoiceMode auch in beiden Modes angezeigt wird
+            getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE); //AuswahlModus
+
+            if(imLandscape){
                 detailsAnzeigen(zuletztSelektiert);        //Methode dA in der MainActivity
             }
         }
@@ -79,20 +85,25 @@ public class MainActivity extends AppCompatActivity {
         //--------------------------------------------------
         @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
-            detailsAnzeigen(position);      //beim drücken wird X angezeigt
+            detailsAnzeigen(position);      //beim drücken wird das ELEMENT-X angezeigt
         }
 
         //--------------------------------------------------
         //soll es direkt (als weiterleitung zum Frame) angezeigt werden oder im 2 spalten-Modus
         private void detailsAnzeigen(int zuletztSelektiert) {
             this.zuletztSelektiert = zuletztSelektiert;
-            if(zweiSpaltenModus){
+
+            //TODO zuletztSelektiert
+            Log.d(TAG, "detailsAnzeigen: zuletztSelektiert: " + zuletztSelektiert);
+
+            if(imLandscape){
                 getListView().setItemChecked(zuletztSelektiert , true); // setItemChecked -> setzt den eintrag auf true
+                getListView().post( () -> getListView().setItemChecked( zuletztSelektiert , true));
+
                 //Detailsfragment soll gebaut werden -> über FragmentManager und findFragment*
                 DetailFragment details = (DetailFragment) getFragmentManager().findFragmentById(R.id.details);
 
-                //
-                if(details!=null || details.getIndex()!=zuletztSelektiert ){ //Was, wenn wir im Landscape-Modus sind?:
+                if(details==null || details.getIndex()!=zuletztSelektiert ){ //Was, wenn wir im Landscape-Modus sind?:
                     //Wenn es nicht den Einstellungen entspricht, soll es neu erstellt werden
                     details = DetailFragment.newInstance(zuletztSelektiert);
 
@@ -105,9 +116,9 @@ public class MainActivity extends AppCompatActivity {
                     fragmentTransaction.commit();
                 }
             }else{ //Was wenn wir im Protrait-Modus sind?:
+
                 Intent intent = new Intent();
-                intent.setClass(getActivity() , DetailFragment.class);
-                // ! in ein Fragment können wir kein intent schicken !
+                intent.setClass(getActivity() , DetailsActivity.class);     //!!! in ein Fragment können wir kein intent schicken !
                 intent.putExtra(DetailFragment.INDEX , zuletztSelektiert);  //INDEX in der DetailsFragment
                 startActivity(intent);
 
@@ -115,13 +126,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     //**************************************************
-    public static class DetailFragment extends Fragment {  //VERWENDET im LANDSCAPE-MODUS
+    // VERWENDET im LANDSCAPE-MODUS
+    public static class DetailFragment extends Fragment {
 
         public static final String INDEX = "index";
         //--------------------------------
         public static DetailFragment newInstance(int indexZuletztSelektiert) {
             //Bauen eines DetailFragments:
             DetailFragment fragment = new DetailFragment(); //erzeugen des DetailFragment
+
+            //TODO indexZuletztSelektiert
+            Log.d(TAG, "newInstance: indexZuletztSelektiert: "+ indexZuletztSelektiert);
 
             //erstelle und gebe den Bundle mit:
             Bundle args = new Bundle();                     //erzeugt Bundle
@@ -158,16 +173,16 @@ public class MainActivity extends AppCompatActivity {
 
     //**************************************************
     public static class DetailsActivity extends AppCompatActivity{
-
+        //TODO DetailsActivity
         @Override
         protected void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+
             //BERÜCKSICHTIGE die orientierung  -> wenn wir das Handy drehen
             //prüfe ob im landscape-Modus
             if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                //Activity soll beendet werden
-                finish();
-                return;//MEthode verlassen wenn es nicht so ist
+                finish();                                   //Activity soll beendet werden
+                return;                                     //Methode verlassen wenn es nicht so ist
             }
 
             if(savedInstanceState==null){
@@ -179,8 +194,8 @@ public class MainActivity extends AppCompatActivity {
                         .beginTransaction()
                         .add( android.R.id.content , detailFragment )
                         .commit();
-            }
 
+            }
         }
     }
 
