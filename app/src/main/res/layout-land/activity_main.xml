@@ -28,6 +28,9 @@
 
 
 <!-- LEGENDE
-"in dem Landscape-Modus sollen die 2 Layouts nebeneinander dargestellt werden"
+"-> in dem Landscape-Modus sollen die 2 Layouts nebeneinander dargestellt werden"
+"-> die breite wurde auf 0dp gesetzt"
+
+
  android:layout_weight="1"  ->
  -->
